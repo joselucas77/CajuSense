@@ -5,6 +5,7 @@ import { Accelerometer } from 'expo-sensors'
 export default function App() {
   const [reading, setReading] = useState({ x: 0, y: 0, z: 0 })
   const [click, setClick] = useState(false)
+  const [ticket, setTicket] = useState(null)
 
   const startReading = (data) => {
     data.addListener(setReading)
@@ -24,7 +25,7 @@ export default function App() {
       startReading(inscription)
       setClick(false)
     }
-  }, [])
+  }, [click])
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sensor Ativo</Text>
