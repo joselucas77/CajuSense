@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Accelerometer } from 'expo-sensors'
+import * as Haptics from 'expo-haptics';
 
 export default function App() {
   const [peakForce, setPeakForce] = useState(0);
   const [reading, setReading] = useState({ x: 0, y: 0, z: 0 })
   const [subscription, setSubscription] = useState(null);
+
+  const lastDominantAxis = useRef(null);
 
   const subscribe = () => {
     Accelerometer.setUpdateInterval(100);
@@ -23,6 +26,21 @@ export default function App() {
         }
         return prevPeak;
       });
+
+      const absX = Math.abs(data.x);
+      const absY = Math.abs(data.y);
+      const absZ = Math.abs(data.z);
+      const max = Math.max(absX, absY, absZ);
+
+      let currentAxisName = 'Z';
+      if (max === absX) currentAxisName = 'X';
+      else if (max === absY) currentAxisName = 'Y';
+
+      if (lastDominantAxis.current && lastDominantAxis.current !== currentAxisName) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }
+
+      lastDominantAxis.current = currentAxisName;
     });
 
     setSubscription(sub);
