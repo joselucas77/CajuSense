@@ -3,14 +3,30 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Accelerometer } from 'expo-sensors'
 
 export default function App() {
+  const [peakForce, setPeakForce] = useState(0);
   const [reading, setReading] = useState({ x: 0, y: 0, z: 0 })
   const [subscription, setSubscription] = useState(null);
 
   const subscribe = () => {
     Accelerometer.setUpdateInterval(100);
-    const sub = Accelerometer.addListener(setReading);
+
+    const sub = Accelerometer.addListener((data) => {
+      setReading(data);
+
+      const totalForce = Math.sqrt(
+        Math.pow(data.x, 2) + Math.pow(data.y, 2) + Math.pow(data.z, 2)
+      );
+
+      setPeakForce((prevPeak) => {
+        if (totalForce > prevPeak) {
+          return totalForce;
+        }
+        return prevPeak;
+      });
+    });
+
     setSubscription(sub);
-  }
+  };
 
   const unsubscribe = () => {
     if (subscription) {
@@ -47,6 +63,10 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.peakContainer}>
+        <Text style={styles.peakLabel}>Impacto Máximo (Força G)</Text>
+        <Text style={styles.peakValue}>{peakForce.toFixed(2)}</Text>
+      </View>
       <Text style={styles.title}>
         {subscription ? "Sensor Ativo" : "Sensor Parado"}
       </Text>
@@ -81,6 +101,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  peakContainer: {
+    backgroundColor: '#222',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
+    alignItems: 'center',
+    width: '80%',
+  },
+  peakLabel: {
+    color: '#AAA',
+    fontSize: 14,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 5,
+  },
+  peakValue: {
+    color: 'white',
+    fontSize: 32,
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 24,
